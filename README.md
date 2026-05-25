@@ -43,6 +43,7 @@ OpenIM 客服系统
 OpenIM Callback
       ↓
 Telegram 用户
+```
 
 ---
 
