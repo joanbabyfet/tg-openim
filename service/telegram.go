@@ -44,13 +44,15 @@ func InitTelegram(token string, webhookURL string) error {
 	return nil
 }
 
-func SendTelegramMessage(chatID int64, text string) {
+func SendTelegramMessage(chatID int64, text string) error {
 	msg := tgbotapi.NewMessage(chatID, text)
 
 	_, err := Bot.Send(msg)
 
 	if err != nil {
 		log.Println("发送TG失败:", err)
-		return
+		return err
 	}
+
+	return nil
 }

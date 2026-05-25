@@ -1,36 +1,48 @@
-一个基于 Gin + Telegram Bot + OpenIM 的客服桥接系统
+一个基于 Gin + Telegram Bot + OpenIM 的客服桥接系统，实现 Telegram 与 OpenIM 双向通信，并支持 AI 自动客服与人工客服无缝切换
 
-实现：
+# ✨ 功能特性
 
-- Telegram 用户发送消息
-- 自动注册 OpenIM 用户
-- 转发到 OpenIM 客服
-- 客服回复后
-- 自动回发 Telegram
+## 🤖 AI 自动客服
+- 自动回复 Telegram 用户
+- 处理常见问题（FAQ）
+- 智能判断是否需要转人工
+
+## 👤 OpenIM 人工客服
+- OpenIM 客服接管会话
+- 客服回复自动回传 Telegram
+- 支持多客服扩展
+
+## 🔁 双向消息桥接
+- Telegram → OpenIM
+- OpenIM → Telegram
+
+## 🔄 智能分流
+- AI 优先处理
+- 无法回答自动转人工
+- 用户可主动请求人工客服
 
 ---
 
-# 架构流程
+# 🧠 系统架构
 
 ```text
 Telegram User
       ↓
-Telegram Webhook
+Telegram Webhook (Gin)
       ↓
-Gin Handler
+AI Router（智能分流）
       ↓
-自动注册 OpenIM 用户
+┌────────────────────────────┐
+│     AI 回复 or 转人工       │
+└────────────────────────────┘
       ↓
-发送消息到 OpenIM
-      ↓
-customer_service 收到消息
+OpenIM 客服系统
       ↓
 客服回复
       ↓
 OpenIM Callback
       ↓
-发送回 Telegram
-```
+Telegram 用户
 
 ---
 
@@ -47,6 +59,7 @@ project/
 │   ├── mapping.go
 │   └── telegram.go
 ├── service/
+│   ├── openai.go
 │   ├── openim.go
 │   ├── telegram.go
 │   └── token.go
@@ -219,44 +232,6 @@ Telegram Bot 已启动
 
 ---
 
-# 测试流程
-
-## 1. Telegram 发消息
-
-```text
-hello
-```
-
----
-
-## 2. OpenIM 收到
-
-客服账号：
-
-```text
-customer_service
-```
-
-收到消息。
-
----
-
-## 3. 客服回复
-
-```text
-你好
-```
-
----
-
-## 4. Telegram 收到
-
-```text
-客服回复: 你好
-```
-
----
-
 # 常见问题
 
 ---
@@ -325,29 +300,56 @@ customer_service 是纯 userID 用户。
 ```text
 Telegram
     ↓
-Gin Gateway
+Gin Gateway（Webhook入口）
     ↓
-OpenIM
+AI Router（智能分流层）
     ↓
-客服后台
+┌──────────────────────────┐
+│        AI 是否可处理？    │
+└──────────────────────────┘
+        ↓ Yes                      ↓ No / 转人工
+     AI 服务                 OpenIM 客服系统
+        ↓                          ↓
+   Telegram 回复            客服后台（OpenIM Web / SDK）
+        ↓                          ↓
+        └──────── OpenIM Callback ────────→ Telegram 用户
 ```
 
-建议：
+## 🧱 架构职责划分
 
-- OpenIM 仅负责 IM
-- 用户体系自己维护
-- RBAC 自己实现
-- OpenIM 只做消息能力
+### 📡 OpenIM（通信层）
+- 仅负责消息收发
+- 会话管理
+- 在线状态维护
+- 不参与任何业务判断
+
+---
+
+### 🧠 业务系统（Gin Gateway）
+- 用户体系管理（User Service）
+- 消息路由与分流（AI / 人工客服）
+- 会话状态控制
+- OpenIM API 调用封装
+
+---
+
+### 🤖 AI 服务层
+- 自动客服回复
+- FAQ 处理
+- 是否转人工的辅助判断
+- 不直接操作 OpenIM
 
 ---
 
 # 技术栈
 
 - Golang
-- Gin
+- Gin（Webhook Gateway）
 - Telegram Bot API
+- OpenAI
 - OpenIM
 - Docker
+- Redis
 - MongoDB
 
 ---

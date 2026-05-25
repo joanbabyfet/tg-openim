@@ -13,6 +13,7 @@ type Config struct {
 	OpenIMSecret string
 	OpenIMAdmin  string
 	Port         string
+	OpenAIKey	 string
 }
 
 var App Config
@@ -28,5 +29,6 @@ func InitConfig() {
 		OpenIMSecret: os.Getenv("OPENIM_SECRET"),
 		OpenIMAdmin:  os.Getenv("OPENIM_ADMIN"),
 		Port:         os.Getenv("PORT"),
+		OpenAIKey:    os.Getenv("OpenAI_Key"),
 	}
 }
