@@ -1,0 +1,72 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary
+*.test
+
+# Go coverage
+*.out
+coverage.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# IDE
+.vscode/
+.idea/
+
+# Mac
+.DS_Store
+
+# Logs
+*.log
+
+# Air
+tmp/
+.air/
+
+# Build
+dist/
+build/
+
+# Docker
+docker-data/
+data/
+
+# OpenIM
+_openim/
+openim-server/
+openim-data/
+
+# Binary output
+main
+app
+server
+
+# Generated files
+*.swp
+*.swo
+
+# Telegram token config
+config.yaml
+config.yml
+
+# Local cache
+.cache/
+
+# JetBrains
+*.iml
+
+# Node
+node_modules/
+
+# Optional
+*.pid
