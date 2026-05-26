@@ -211,10 +211,10 @@ localhost
 例如：
 
 ```yaml
-callback:
-  afterSendSingleMsg:
-    enable: true
-    callbackURL: "http://host.docker.internal:8080/openim/callback"
+url: http://host.docker.internal:8080/openim/callback
+afterSendSingleMsg:
+  enable: true
+  timeout: 5
 ```
 ---
 
