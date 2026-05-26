@@ -62,6 +62,7 @@ project/
 ├── service/
 │   ├── openai.go
 │   ├── openim.go
+│   ├── telegram_menu.go
 │   ├── telegram.go
 │   └── token.go
 ├── main.go
