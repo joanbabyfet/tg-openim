@@ -17,7 +17,7 @@ func SendToOpenIM(userID string, text string) error {
 
 	body := map[string]interface{}{
 		"sendID": userID, //tg_123456 用户
-		"recvID": "7833973372", // OpenIM接收用户(客服)
+		"recvID": config.App.OpenIMCustomerService, // OpenIM接收用户(客服)
 		"groupID": "",
 		"senderPlatformID": 1,
 		"sessionType": 1,

@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"io"
 	"log"
+	"strings"
 
+	"tg-openim/config"
 	"tg-openim/model"
 	"tg-openim/service"
 
@@ -22,7 +24,7 @@ type TextContent struct {
 	Content string `json:"content"`
 }
 
-//OpenIM 回调
+//OpenIM 回调, 所有单聊消息都会先进 callback
 func OpenIMCallback(c *gin.Context) {
 
 	log.Println("======== OpenIM Callback ========")
@@ -52,18 +54,32 @@ func OpenIMCallback(c *gin.Context) {
 
 		return
 	}
-
+	
 	var text TextContent
 
 	json.Unmarshal([]byte(msg.Content), &text)
+	sendID := msg.SendID //谁发的
+    recvID := msg.RecvID //发给谁
+	log.Println("sendID:", sendID)
+    log.Println("recvID:", recvID)
 	
-	chatID, ok := model.TgUserMap[msg.RecvID]
-	if ok {
-		service.SendTelegramMessage(
-			chatID,
-			"客服回复: "+text.Content,
-		)
-	}
+	//消息路由
+	switch {
+	// Telegram 用户
+    case strings.HasPrefix(sendID, "tg_"):
+		log.Println("tg user send message")
+	//客服发的
+    case sendID == config.App.OpenIMCustomerService:
+        chatID, ok := model.TgUserMap[recvID]
+		if ok {
+			service.SendTelegramMessage(
+				chatID,
+				"客服回复: "+text.Content,
+			)
+		}
+    default:
+        log.Println("unknown message source")
+    }
 
 	c.JSON(200, gin.H{
 		"errCode": 0,
