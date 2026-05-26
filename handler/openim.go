@@ -72,10 +72,7 @@ func OpenIMCallback(c *gin.Context) {
     case sendID == config.App.OpenIMCustomerService:
         chatID, ok := model.TgUserMap[recvID]
 		if ok {
-			service.SendTelegramMessage(
-				chatID,
-				"客服回复: "+text.Content,
-			)
+			service.SendTelegramMessage(chatID, "客服回复: "+text.Content, nil)
 		}
     default:
         log.Println("unknown message source")
