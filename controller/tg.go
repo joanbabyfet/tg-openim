@@ -1,11 +1,11 @@
-package handler
+package controller
 
 import (
 	"fmt"
 	"log"
 	"strings"
 
-	"tg-openim/model"
+	"tg-openim/cache"
 	"tg-openim/service"
 
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
@@ -69,15 +69,35 @@ func HandleMessage(update tgbotapi.Update) {
 	)
 
 	// TG ↔ OpenIM 映射
-	model.TgUserMap[userID] = chatID
+	cache.TgUserMap[userID] = chatID
 
 	//菜单命令
 	switch text {
 
 	case "/start":
 		service.SendTelegramMessage(chatID, "欢迎使用系统", service.MainMenu())
-	default:
+		return
+	case "/menu":
 		service.SendTelegramMessage(chatID, "请选择菜单", service.MainMenu())
+		return
+	case "/help":
+		helpText := `
+可用命令：
+
+/start - 启动机器人
+/menu  - 显示菜单
+/help  - 帮助说明
+
+功能说明：
+
+• 充值
+• 提现
+• 钱包查询
+• AI客服
+• 人工客服
+`
+		service.SendTelegramMessage(chatID, helpText, nil)
+		return
 	}
 
 	//异步转发 AI + OpenIM（避免阻塞 webhook）

@@ -53,18 +53,19 @@ Telegram 用户
 project/
 ├── config/
 │   └── config.go
-├── handler/
+├── controller/
 │   ├── openim.go
 │   └── tg.go
-├── model/
-│   ├── mapping.go
-│   └── telegram.go
+├── dto/
+│   └── openim_dto.go
+├── router/
+│   └── router.go
 ├── service/
-│   ├── openai.go
-│   ├── openim.go
-│   ├── telegram_menu.go
-│   ├── telegram.go
-│   └── token.go
+│   ├── openai_service.go
+│   ├── openim_service.go
+│   └── telegram_service.go
+├── cache/
+│   └── tg.go
 ├── main.go
 ├── go.mod
 └── README.md

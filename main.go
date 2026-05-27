@@ -4,10 +4,8 @@ import (
 	"log"
 
 	"tg-openim/config"
-	"tg-openim/handler"
+	"tg-openim/router"
 	"tg-openim/service"
-
-	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -25,20 +23,14 @@ func main() {
 		panic(err)
 	}
 
-	// 获取OpenIM 管理员token
+	// 获取 OpenIM 管理员 token
 	err = service.RefreshAdminToken()
-
 	if err != nil {
 		panic(err)
 	}
 
-	r := gin.Default()
-
-	// TG webhook
-	r.POST("/webhook", handler.TgWebhook)
-
-	// OpenIM callback
-	r.POST("/openim/callback/callbackAfterSendSingleMsgCommand", handler.OpenIMCallback)
+	// 路由
+	r := router.InitRouter()
 
 	log.Println("服务启动:", config.App.Port)
 

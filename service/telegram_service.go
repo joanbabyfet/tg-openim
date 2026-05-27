@@ -61,3 +61,35 @@ func SendTelegramMessage(chatID int64, text string, replyMarkup interface{}) err
 
 	return nil
 }
+
+func MainMenu() tgbotapi.InlineKeyboardMarkup {
+
+    return tgbotapi.NewInlineKeyboardMarkup(
+
+		tgbotapi.NewInlineKeyboardRow(
+
+			tgbotapi.NewInlineKeyboardButtonData(
+				"💰 充值",
+				"deposit",
+			),
+
+			tgbotapi.NewInlineKeyboardButtonData(
+				"💸 提现",
+				"withdraw",
+			),
+		),
+
+		tgbotapi.NewInlineKeyboardRow(
+
+			tgbotapi.NewInlineKeyboardButtonData(
+				"👛 钱包",
+				"wallet",
+			),
+
+			tgbotapi.NewInlineKeyboardButtonData(
+				"🎧 客服",
+				"support",
+			),
+		),
+	)
+}
