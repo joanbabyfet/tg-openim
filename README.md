@@ -54,8 +54,8 @@ project/
 ├── config/
 │   └── config.go
 ├── controller/
-│   ├── openim.go
-│   └── tg.go
+│   ├── openim_controller.go
+│   └── tg_controller.go
 ├── dto/
 │   └── openim_dto.go
 ├── router/
