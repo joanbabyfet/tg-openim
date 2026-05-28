@@ -13,10 +13,20 @@ import (
 	"tg-openim/dto"
 )
 
-var AdminToken string
+type OpenIMService struct {
+	AdminToken string
+	Client      *http.Client
+}
+
+//构造函数
+func NewOpenIMService() *OpenIMService {
+	return &OpenIMService{
+		Client: &http.Client{},
+	}
+}
 
 //获取imAdmin管理员token
-func RefreshAdminToken() error {
+func (s *OpenIMService) RefreshAdminToken() error {
 
 	body := map[string]interface{}{
 		"userID": config.App.OpenIMAdmin,
@@ -50,14 +60,14 @@ func RefreshAdminToken() error {
 	log.Println("token返回:", result)
 
 	data := result["data"].(map[string]interface{})
-	AdminToken = data["token"].(string)
+	s.AdminToken = data["token"].(string)
 
 	log.Println("OpenIM token 获取成功")
 
 	return nil
 }
 
-func SendToOpenIM(userID string, text string) error {
+func (s *OpenIMService) SendToOpenIM(userID string, text string) error {
 
 	body := map[string]interface{}{
 		"sendID": userID, //tg_123456 用户
@@ -80,7 +90,7 @@ func SendToOpenIM(userID string, text string) error {
 	)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("token", AdminToken)
+	req.Header.Set("token", s.AdminToken)
 	req.Header.Set("operationID", strconv.FormatInt(time.Now().UnixMilli(), 10))
 
 	client := &http.Client{}
@@ -102,7 +112,7 @@ func SendToOpenIM(userID string, text string) error {
 	return nil
 }
 
-func RegisterOpenIMUser(userID string, nickname string) error {
+func (s *OpenIMService) RegisterOpenIMUser(userID string, nickname string) error {
 
 	body := dto.OpenIMRegisterReq{
 		Users: []dto.OpenIMUser{
@@ -122,7 +132,7 @@ func RegisterOpenIMUser(userID string, nickname string) error {
 	)
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("token", AdminToken)
+	req.Header.Set("token", s.AdminToken)
 	req.Header.Set("operationID", strconv.FormatInt(time.Now().UnixMilli(), 10))
 
 	client := &http.Client{}
@@ -142,7 +152,7 @@ func RegisterOpenIMUser(userID string, nickname string) error {
 	return nil
 }
 
-func EnsureTGUser(tgID int64, username string, firstName string) string {
+func (s *OpenIMService) EnsureTGUser(tgID int64, username string, firstName string) string {
 	//不要用tg username当当 OpenIM 用户ID, 因tg username用户可修改
 	userID := fmt.Sprintf("tg_%d", tgID)
 
@@ -152,7 +162,7 @@ func EnsureTGUser(tgID int64, username string, firstName string) string {
 		nickname = firstName
 	}
 
-	_ = RegisterOpenIMUser(userID, nickname)
+	_ = s.RegisterOpenIMUser(userID, nickname)
 
 	return userID
 }

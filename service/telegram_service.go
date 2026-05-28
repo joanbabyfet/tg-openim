@@ -6,45 +6,56 @@ import (
 	tgbotapi "github.com/go-telegram-bot-api/telegram-bot-api/v5"
 )
 
-var Bot *tgbotapi.BotAPI
+type TelegramService struct {
+	Bot *tgbotapi.BotAPI
+}
 
-func InitTelegram(token string, webhookURL string) error {
+// 构造函数
+func NewTelegramService(
+	token string,
+	webhookURL string,
+) (*TelegramService, error) {
 
-	var err error
+	bot, err := tgbotapi.NewBotAPI(token)
 
-	Bot, err = tgbotapi.NewBotAPI(token)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// 开启 debug（可选）
-	Bot.Debug = true
+	bot.Debug = true
 
-	// 创建 webhook
-	webhook, err := tgbotapi.NewWebhook(webhookURL)
+	// webhook
+	webhook, err := tgbotapi.NewWebhook(
+		webhookURL,
+	)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// 设置 webhook
-	_, err = Bot.Request(webhook)
+	_, err = bot.Request(webhook)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	// 查看 webhook 信息（可选）
-	info, err := Bot.GetWebhookInfo()
+	info, err := bot.GetWebhookInfo()
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	log.Printf("Webhook: %+v\n", info)
+
 	log.Println("Telegram Bot 已启动")
 
-	return nil
+	return &TelegramService{
+		Bot: bot,
+	}, nil
 }
 
-func SendTelegramMessage(chatID int64, text string, replyMarkup interface{}) error {
+//发消息
+func (s *TelegramService) SendTelegramMessage(chatID int64, text string, replyMarkup interface{}) error {
 	msg := tgbotapi.NewMessage(chatID, text)
 
 	// 设置按钮
@@ -52,7 +63,7 @@ func SendTelegramMessage(chatID int64, text string, replyMarkup interface{}) err
 		msg.ReplyMarkup = replyMarkup
 	}
 	
-	_, err := Bot.Send(msg)
+	_, err := s.Bot.Send(msg)
 
 	if err != nil {
 		log.Println("发送TG失败:", err)
@@ -62,7 +73,8 @@ func SendTelegramMessage(chatID int64, text string, replyMarkup interface{}) err
 	return nil
 }
 
-func MainMenu() tgbotapi.InlineKeyboardMarkup {
+//主菜单
+func (s *TelegramService) MainMenu() tgbotapi.InlineKeyboardMarkup {
 
     return tgbotapi.NewInlineKeyboardMarkup(
 

@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"tg-openim/config"
+	"tg-openim/controller"
 	"tg-openim/router"
 	"tg-openim/service"
 )
@@ -13,8 +14,8 @@ func main() {
 	// 配置
 	config.InitConfig()
 
-	// 初始化TG
-	err := service.InitTelegram(
+	// 创建 service 实例, Telegram Service
+	telegramService, err := service.NewTelegramService(
 		config.App.BotToken,
 		config.App.WebhookUrl,
 	)
@@ -23,16 +24,41 @@ func main() {
 		panic(err)
 	}
 
-	// 获取 OpenIM 管理员 token
-	err = service.RefreshAdminToken()
+	// OpenIM Service
+	openIMService := service.NewOpenIMService()	
+
+	// OpenAI Service
+	openAIService := service.NewOpenAIService()
+
+	// 获取 OpenIM token
+	err = openIMService.RefreshAdminToken()
+
 	if err != nil {
 		panic(err)
 	}
 
-	// 路由
-	r := router.InitRouter()
+	// 创建 Controller 对象，并注入依赖
+	tgController := controller.NewTgController(
+		openIMService,
+		telegramService,
+		openAIService,
+	)
+
+	openIMController := controller.NewOpenIMController(
+		telegramService,
+	)
+
+	// Router
+	r := router.InitRouter(
+		tgController,
+		openIMController,
+	)
 
 	log.Println("服务启动:", config.App.Port)
 
-	r.Run(":" + config.App.Port)
+	err = r.Run(":" + config.App.Port)
+
+	if err != nil {
+		panic(err)
+	}
 }

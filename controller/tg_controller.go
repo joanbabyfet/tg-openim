@@ -13,14 +13,34 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-//Telegram webhook
-func TgWebhook(c *gin.Context) {
+type TgController struct {
+	OpenIMService *service.OpenIMService
+	TelegramService *service.TelegramService
+	OpenAIService *service.OpenAIService
+}
+
+//构造函数
+func NewTgController(
+	openim *service.OpenIMService,
+	tg *service.TelegramService,
+	openai *service.OpenAIService,
+) *TgController {
+
+	return &TgController{
+		OpenIMService:   openim,
+		TelegramService: tg,
+		OpenAIService: openai,
+	}
+}
+
+//把函数改成 method, Telegram webhook
+func (c *TgController) TgWebhook(ctx *gin.Context) {
 
 	var update tgbotapi.Update
 
-	if err := c.ShouldBindJSON(&update); err != nil {
+	if err := ctx.ShouldBindJSON(&update); err != nil {
 
-		c.JSON(400, gin.H{
+		ctx.JSON(400, gin.H{
 			"msg": err.Error(),
 		})
 
@@ -29,9 +49,9 @@ func TgWebhook(c *gin.Context) {
 
 	//InlineKeyboard 按钮点击
 	if update.CallbackQuery != nil {
-		HandleCallback(update)
+		c.HandleCallback(update)
 
-		c.JSON(200, gin.H{
+		ctx.JSON(200, gin.H{
 			"ok": true,
 		})
 
@@ -40,15 +60,15 @@ func TgWebhook(c *gin.Context) {
 
 	//普通消息
 	if update.Message != nil {
-		HandleMessage(update)
+		c.HandleMessage(update)
 	}
 
-	c.JSON(200, gin.H{
+	ctx.JSON(200, gin.H{
 		"ok": true,
 	})
 }
 
-func HandleMessage(update tgbotapi.Update) {
+func (c *TgController) HandleMessage(update tgbotapi.Update) {
 	text := update.Message.Text
 	chatID := update.Message.Chat.ID
 	tgUser := update.Message.From
@@ -62,7 +82,7 @@ func HandleMessage(update tgbotapi.Update) {
 	log.Println("TG收到消息:", text, userName)
 
 	// 自动注册 OpenIM 用户
-	userID := service.EnsureTGUser(
+	userID := c.OpenIMService.EnsureTGUser(
 		tgUser.ID,
 		tgUser.UserName,
 		tgUser.FirstName,
@@ -75,10 +95,10 @@ func HandleMessage(update tgbotapi.Update) {
 	switch text {
 
 	case "/start":
-		service.SendTelegramMessage(chatID, "欢迎使用系统", service.MainMenu())
+		c.TelegramService.SendTelegramMessage(chatID, "欢迎使用系统", c.TelegramService.MainMenu())
 		return
 	case "/menu":
-		service.SendTelegramMessage(chatID, "请选择菜单", service.MainMenu())
+		c.TelegramService.SendTelegramMessage(chatID, "请选择菜单", c.TelegramService.MainMenu())
 		return
 	case "/help":
 		helpText := `
@@ -96,7 +116,7 @@ func HandleMessage(update tgbotapi.Update) {
 • AI客服
 • 人工客服
 `
-		service.SendTelegramMessage(chatID, helpText, nil)
+		c.TelegramService.SendTelegramMessage(chatID, helpText, nil)
 		return
 	}
 
@@ -105,14 +125,14 @@ func HandleMessage(update tgbotapi.Update) {
 
 		log.Println("开始AI处理:", uid)
 
-		reply, err := service.ChatAI(msg)
+		reply, err := c.OpenAIService.ChatAI(msg)
 
 		// AI失败 → 转人工
 		if err != nil {
 
 			log.Println("AI失败, 转OpenIM:", err)
 
-			err = service.SendToOpenIM(uid, msg)
+			err = c.OpenIMService.SendToOpenIM(uid, msg)
 
 			if err != nil {
 				log.Println("OpenIM转发失败:", err)
@@ -124,7 +144,7 @@ func HandleMessage(update tgbotapi.Update) {
 		}
 
 		// 回复TG
-		err = service.SendTelegramMessage(cid, reply, nil)
+		err = c.TelegramService.SendTelegramMessage(cid, reply, nil)
 
 		if err != nil {
 			log.Println("TG发送失败:", err)
@@ -135,7 +155,7 @@ func HandleMessage(update tgbotapi.Update) {
 
 			log.Println("AI触发转人工")
 
-			err = service.SendToOpenIM(uid, msg)
+			err = c.OpenIMService.SendToOpenIM(uid, msg)
 
 			if err != nil {
 				log.Println("转OpenIM失败:", err)
@@ -147,7 +167,7 @@ func HandleMessage(update tgbotapi.Update) {
 	}(userID, text, chatID)
 }
 
-func HandleCallback(update tgbotapi.Update) {
+func (c *TgController) HandleCallback(update tgbotapi.Update) {
 	callback := update.CallbackQuery
 
 	data := callback.Data
@@ -158,17 +178,17 @@ func HandleCallback(update tgbotapi.Update) {
 
 	// 充值
 	case "deposit":
-		service.SendTelegramMessage(chatID, "请输入充值金额", nil)
+		c.TelegramService.SendTelegramMessage(chatID, "请输入充值金额", nil)
 	// 提现
 	case "withdraw":
-		service.SendTelegramMessage(chatID, "请输入提现金额", nil)
+		c.TelegramService.SendTelegramMessage(chatID, "请输入提现金额", nil)
 	// 钱包
 	case "wallet":
 		msg := fmt.Sprintf("钱包余额: %.2f USDT", 100.50)
-		service.SendTelegramMessage(chatID, msg, nil)
+		c.TelegramService.SendTelegramMessage(chatID, msg, nil)
 	// 客服
 	case "support":
-		service.SendTelegramMessage(chatID, "客服处理中...", nil)
+		c.TelegramService.SendTelegramMessage(chatID, "客服处理中...", nil)
 	}
 
 	// 告诉 Telegram callback 已处理
@@ -177,5 +197,5 @@ func HandleCallback(update tgbotapi.Update) {
 		"操作成功",
 	)
 
-	service.Bot.Request(callbackConfig)
+	c.TelegramService.Bot.Request(callbackConfig)
 }

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"tg-openim/cache"
+	"tg-openim/common"
 	"tg-openim/config"
 	"tg-openim/dto"
 	"tg-openim/service"
@@ -14,12 +15,23 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type OpenIMController struct {
+	TelegramService *service.TelegramService
+}
+
+//构造函数
+func NewOpenIMController(s *service.TelegramService) *OpenIMController {
+	return &OpenIMController{
+		TelegramService: s,
+	}
+}
+
 //OpenIM 回调, 所有单聊消息都会先进 callback
-func OpenIMCallback(c *gin.Context) {
+func (c *OpenIMController) OpenIMCallback(ctx *gin.Context) {
 
 	log.Println("======== OpenIM Callback ========")
 
-	body, _ := io.ReadAll(c.Request.Body)
+	body, _ := io.ReadAll(ctx.Request.Body)
 
 	log.Println(string(body))
 
@@ -27,9 +39,7 @@ func OpenIMCallback(c *gin.Context) {
 
 	if err := json.Unmarshal(body, &msg); err != nil {
 
-		c.JSON(400, gin.H{
-			"err": err.Error(),
-		})
+		common.Fail(ctx, -1, err.Error(), nil)
 
 		return
 	}
@@ -37,10 +47,7 @@ func OpenIMCallback(c *gin.Context) {
 	// 只处理文本消息
 	if msg.ContentType != 101 {
 
-		c.JSON(200, gin.H{
-			"errCode": 0,
-			"errMsg":  "",
-		})
+		common.Success(ctx, gin.H{})
 
 		return
 	}
@@ -60,14 +67,11 @@ func OpenIMCallback(c *gin.Context) {
     case sendID == config.App.OpenIMCustomerService:
         chatID, ok := cache.TgUserMap[recvID]
 		if ok {
-			service.SendTelegramMessage(chatID, "客服回复: "+text.Content, nil)
+			c.TelegramService.SendTelegramMessage(chatID, "客服回复: "+text.Content, nil)
 		}
     default:
         log.Println("unknown message source")
     }
 
-	c.JSON(200, gin.H{
-		"errCode": 0,
-		"errMsg":  "",
-	})
+	common.Success(ctx, gin.H{})
 }

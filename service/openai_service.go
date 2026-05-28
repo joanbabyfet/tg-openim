@@ -8,7 +8,18 @@ import (
 	"tg-openim/config"
 )
 
-func ChatAI(text string) (string, error) {
+type OpenAIService struct {
+	Client *http.Client
+}
+
+// 构造函数
+func NewOpenAIService() *OpenAIService {
+	return &OpenAIService{
+		Client: &http.Client{},
+	}
+}
+
+func (s *OpenAIService) ChatAI(text string) (string, error) {
 	log.Println("===== ChatAI Request Start =====")
 	log.Println("User Input:", text)
 	

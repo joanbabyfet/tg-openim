@@ -6,15 +6,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func InitRouter() *gin.Engine {
+//改为 注入 controller 实例
+func InitRouter(
+	tgController *controller.TgController,
+	openIMController *controller.OpenIMController,
+) *gin.Engine {
 
 	r := gin.Default()
 
 	// TG webhook
-	r.POST("/webhook", controller.TgWebhook)
+	r.POST("/webhook", tgController.TgWebhook)
 
 	// OpenIM callback
-	r.POST("/openim/callback/callbackAfterSendSingleMsgCommand", controller.OpenIMCallback)
+	r.POST("/openim/callback/callbackAfterSendSingleMsgCommand", openIMController.OpenIMCallback)
 
 	return r
 }
